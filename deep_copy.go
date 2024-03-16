@@ -103,7 +103,11 @@ func copyArray(value any, pointers map[uintptr]any) (any, error) {
 			return nil, fmt.Errorf("failed to clone array item at index %v: %v", i, err)
 		}
 
-		copied.Index(i).Set(reflect.ValueOf(item))
+		itemValueOf := reflect.ValueOf(item)
+
+		if itemValueOf.IsValid() {
+			copied.Index(i).Set(itemValueOf)
+		}
 	}
 
 	return copied.Interface(), nil
@@ -116,8 +120,8 @@ func copySlice(value any, pointers map[uintptr]any) (any, error) {
 		return nil, fmt.Errorf("must pass a value with kind of Slice; got %v", valueOf.Kind())
 	}
 
-	size := valueOf.Len()
 	typeOf := reflect.TypeOf(value)
+	size := valueOf.Len()
 	copied := reflect.MakeSlice(typeOf, size, size)
 
 	for i := 0; i < size; i++ {
@@ -145,7 +149,9 @@ func copyMap(value any, pointers map[uintptr]any) (any, error) {
 	}
 
 	typeOf := reflect.TypeOf(value)
-	copied := reflect.MakeMapWithSize(typeOf, valueOf.Len())
+	size := valueOf.Len()
+	copied := reflect.MakeMapWithSize(typeOf, size)
+
 	iter := valueOf.MapRange()
 
 	for iter.Next() {
@@ -161,7 +167,12 @@ func copyMap(value any, pointers map[uintptr]any) (any, error) {
 			return nil, fmt.Errorf("failed to clone map value %v: %v", iter.Value().Interface(), err)
 		}
 
-		copied.SetMapIndex(reflect.ValueOf(mapKey), reflect.ValueOf(mapValue))
+		mapKeyValueOf := reflect.ValueOf(mapKey)
+		mapValueValueOf := reflect.ValueOf(mapValue)
+
+		if mapKeyValueOf.IsValid() && mapValueValueOf.IsValid() {
+			copied.SetMapIndex(mapKeyValueOf, mapValueValueOf)
+		}
 	}
 
 	return copied.Interface(), nil
@@ -174,8 +185,9 @@ func copyPointer(value any, pointers map[uintptr]any) (any, error) {
 		return nil, fmt.Errorf("must pass a value with kind of Ptr; got %v", valueOf.Kind())
 	}
 
+	typeOf := reflect.TypeOf(value)
+
 	if valueOf.IsNil() {
-		typeOf := reflect.TypeOf(value)
 		return reflect.Zero(typeOf).Interface(), nil
 	}
 
@@ -184,8 +196,6 @@ func copyPointer(value any, pointers map[uintptr]any) (any, error) {
 	if copied, ok := pointers[address]; ok {
 		return copied, nil
 	}
-
-	typeOf := reflect.TypeOf(value)
 
 	copied := reflect.New(typeOf.Elem())
 
@@ -200,7 +210,7 @@ func copyPointer(value any, pointers map[uintptr]any) (any, error) {
 	itemValueOf := reflect.ValueOf(item)
 
 	if itemValueOf.IsValid() {
-		copied.Elem().Set(reflect.ValueOf(item))
+		copied.Elem().Set(itemValueOf)
 	}
 
 	return copied.Interface(), nil
@@ -230,7 +240,11 @@ func copyStruct(value any, pointers map[uintptr]any) (any, error) {
 			return nil, fmt.Errorf("failed to copy the field %v in the struct %#v: %v", typeOf.Field(i).Name, value, err)
 		}
 
-		copied.Elem().Field(i).Set(reflect.ValueOf(item))
+		itemValueOf := reflect.ValueOf(item)
+
+		if itemValueOf.IsValid() {
+			copied.Elem().Field(i).Set(itemValueOf)
+		}
 	}
 
 	return copied.Elem().Interface(), nil

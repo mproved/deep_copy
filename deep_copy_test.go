@@ -44,6 +44,30 @@ func TestDeepCopy(t *testing.T) {
 	}
 }
 
+type Test2 struct {
+	Pointers  [3]any
+	Pointers2 []any
+	Map       map[any]any
+}
+
+func Test2DeepCopy(t *testing.T) {
+	original := Test2{
+		Pointers: [3]any{
+			nil, nil, nil,
+		},
+		Pointers2: []any{
+			nil, nil, nil,
+		},
+		Map: map[any]any{
+			nil: nil,
+			1:   nil,
+			nil: 1,
+		},
+	}
+	copied := MustCopy(original).(Test2)
+	_ = copied
+}
+
 func BenchmarkDeepCopy(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		v1 := NewTestStruct()
