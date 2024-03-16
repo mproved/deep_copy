@@ -121,6 +121,11 @@ func copySlice(value any, pointers map[uintptr]any) (any, error) {
 	}
 
 	typeOf := reflect.TypeOf(value)
+
+	if valueOf.IsNil() {
+		return reflect.Zero(typeOf).Interface(), nil
+	}
+
 	size := valueOf.Len()
 	copied := reflect.MakeSlice(typeOf, size, size)
 
@@ -149,6 +154,11 @@ func copyMap(value any, pointers map[uintptr]any) (any, error) {
 	}
 
 	typeOf := reflect.TypeOf(value)
+
+	if valueOf.IsNil() {
+		return reflect.Zero(typeOf).Interface(), nil
+	}
+
 	size := valueOf.Len()
 	copied := reflect.MakeMapWithSize(typeOf, size)
 
@@ -170,7 +180,8 @@ func copyMap(value any, pointers map[uintptr]any) (any, error) {
 		mapKeyValueOf := reflect.ValueOf(mapKey)
 		mapValueValueOf := reflect.ValueOf(mapValue)
 
-		if mapKeyValueOf.IsValid() && mapValueValueOf.IsValid() {
+		if mapKeyValueOf.IsValid() &&
+			mapValueValueOf.IsValid() {
 			copied.SetMapIndex(mapKeyValueOf, mapValueValueOf)
 		}
 	}

@@ -1,6 +1,7 @@
 package deep_copy
 
 import (
+	"reflect"
 	"testing"
 )
 
@@ -66,6 +67,26 @@ func Test2DeepCopy(t *testing.T) {
 	}
 	copied := MustCopy(original).(Test2)
 	_ = copied
+}
+
+type Test3 struct {
+	NilSlice   []int
+	EmptySlice []int
+	NilMap     map[int]int
+	EmptyMap   map[int]int
+}
+
+func Test3DeepCopy(t *testing.T) {
+	original := Test3{
+		EmptySlice: []int{},
+		EmptyMap:   map[int]int{},
+	}
+
+	copied := MustCopy(original).(Test3)
+
+	if !reflect.DeepEqual(original, copied) {
+		t.Fatalf(`copy failed`)
+	}
 }
 
 func BenchmarkDeepCopy(b *testing.B) {
